@@ -13,7 +13,6 @@ module.exports = {
         var interviewPromises = [];
         interviews.forEach(function(interview){
             interviewPromises.push(saveInterview(interview));
-            console.log(interview);
         });
         return Promise.all(interviewPromises);
     },

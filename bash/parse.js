@@ -45,19 +45,29 @@ function parseFile(file) {
 function parseDir(dir) {
     return fs.readdirAsync(dir).then(function(files) {
         console.log("read dir ", files.length);
+        var promise = Q();
+        var results = [];
         var promises = _.map(files, function(file) {
             var filePath = dir + '/' + file;
             var fsStat = fs.statSync(filePath);
-            if (fsStat.isDirectory()) return parseDir(filePath);
-            else if (fsStat.isFile() && file.endsWith('.txt')) {
-                return parseFile(filePath);
+            if (fsStat.isDirectory()) {
+                promise = promise.then(function() {
+                    return parseFile(filePath).then(function(its) {
+                        results = results.concat(its);
+                        return results;
+                    });
+                });
+                return parseDir(filePath);
+            } else if (fsStat.isFile() && file.endsWith('.txt')) {
+                promise = promise.then(function() {
+                    return parseFile(filePath).then(function(its) {
+                        results = results.concat(its);
+                        return results;
+                    });
+                });
             } else console.log('ignore ', filePath);
         })
-        return Promise.all(promises).then(function(interviewses) {
-            return _.reduce(interviewses, function(interviews, item) {
-                return interviews.concat(item);
-            }, []);
-        });
+        return promise;
     });
 }
 
